@@ -48,8 +48,8 @@
           return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
         },
         onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
-          console.error(error.stack);
-          // return parentZoneDelegate.handleError(targetZone, error);
+          // console.error(error.stack);
+          return parentZoneDelegate.handleError(targetZone, error);
         },
         // Executed whenever an async operation like setTimeout is detected
         onScheduleTask: (parentZoneDelegate, currentZone, targetZone, task) => {
@@ -83,9 +83,18 @@
         name: 'extended-my-zone'
       })
 
-      // Will invoke onInvoke
+      // Synchronously invokes a function in a given zone. 
+      // It sets the current zone to myZone when executing callback and resets it to its previous value once the callback has finished executing
       myZone.run(main);
-      debugger;
+
+      // Same as run but catches runtime errors and provides a mechanism to intercept them.
+      // If an error is not handled by any parent Zone it’s re-thrown.
+      // myZone.runGuarded(main);
+
+      // The mechanism is similar in the idea to how Function.prototype.bind works in JavaScript.
+      // Always bind to myZone
+      // myZone.run(myZone.wrap(main));
+
       console.log(`Data in Zone ${myZone.name} under key ${propKey} -> ${myZone.get(propKey)}`);
     </script>
   </body>
