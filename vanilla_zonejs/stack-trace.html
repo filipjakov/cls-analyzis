@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zone.js Stack Trace Demo</title>
+    <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script>
+    <script src="https://unpkg.com/zone.js@0.8.20/dist/long-stack-trace-zone.js"></script>
+  </head>
+
+  <body>
+    <h1>Stack Trace Demo</h1>
+
+    <button id="button1">Bind Error</button>
+    <button id="button2">Cause Error</button>
+
+    <script>
+      /*
+      * This is a simple example of async stack traces with zones
+      */
+      function main () {
+        button1.addEventListener('click', bindSecondButton);
+      }
+
+      function bindSecondButton () {
+        button2.addEventListener('click', throwError);
+      }
+
+      function throwError () {
+        throw new Error('SHIZZLE');
+      }
+
+      /*
+      * Bootstrap the app
+      * Either uncomment the raw main function or the forked zone and check the console
+      */
+      // main();
+      const zoneSpecification = {
+        onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => 
+          console.log(error.stack)
+      };
+
+      Zone.current.fork(zoneSpecification).fork(Zone.longStackTraceZoneSpec).run(main);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zone.js API Demo</title>
+    <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script>
+    <script src="https://unpkg.com/zone.js@0.8.20/dist/long-stack-trace-zone.js"></script>
+  </head>
+
+  <body>
+    <script>
+      console.log(`Starting demo in Zone: ${Zone.current.name}`);
+      const propKey = 'customData';
+      
+      const foo = () => console.log('In foo.');
+      const bar = () => console.log('In bar.');
+      const baz = () => console.log('In baz.');
+      const setTimeoutCb = () => {
+        console.log('In setTimeoutCb');
+        throw new Error('💩💩💩!');
+      }
+
+      const main = () => {
+        foo();
+        setTimeout(setTimeoutCb, 2000);
+        bar();
+        baz();
+      }
+
+      const myZoneSpec = {
+        // Mostly used for tooling and debugging purposes.
+        name: 'my-zone',
+        properties: { 
+          [propKey]: 'custom data',
+        },
+        onFork: (parentZoneDelegate, currentZone, targetZone, zoneSpec) => {
+          console.log(`Forking from Zone ${targetZone.name} to Zone ${zoneSpec.name}.`)
+          return parentZoneDelegate.fork(targetZone, zoneSpec);
+        },
+        // Allows interception of the wrapping of the callback.
+        onIntercept: (parentZoneDelegate, currentZone, targetZone, delegate, source) => {
+          console.log('Intercepting wrapping.');
+          return parentZoneDelegate.intercept(targetZone, delegate, source);
+        },
+        // Get notified whenever the zone is entered by running z.run()
+        onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs, source) => {
+          console.log(`Entering zone: '${targetZone.name}'.`);
+          return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
+        },
+        onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
+          console.error(error.stack);
+          // return parentZoneDelegate.handleError(targetZone, error);
+        },
+        // Executed whenever an async operation like setTimeout is detected
+        onScheduleTask: (parentZoneDelegate, currentZone, targetZone, task) => {
+          console.log(`Task with callback '${task.callback.name}' is added to the task queue.`);
+          return parentZoneDelegate.scheduleTask(targetZone, task)
+        },
+        // executed when a callback passed to an async operation is executed
+        onInvokeTask: (parentZoneDelegate, currentZone, targetZone, task, applyThis, applyArgs) => {
+          console.log(`Task with callback '${task.callback.name}' is removed from the task queue.`);
+          return parentZoneDelegate.invokeTask(targetZone, task, applyThis, applyArgs)
+        },
+        onCancelTask: (parentZoneDelegate, currentZone, targetZone, task) => {
+          console.log(`Task with callback '${task.callback.name}' is being canceled.`);
+          return parentZoneDelegate.cancelTask(targetZone, task)
+        },
+        // Notifies of changes to the task queue empty status.
+        // You can’t use it to track individual tasks.
+        onHasTask: (parentZoneDelegate, currentZone, targetZone, hasTaskState) => {
+          // We are only interested in event which originate from our zone
+          if (currentZone === targetZone) {
+            console.log(hasTaskState);
+          }
+          // return parentZoneDelegate.hasTask(targetZone, isEmpty);
+        }
+      };
+
+      const myZone = Zone.current.fork(Zone.longStackTraceZoneSpec).fork(myZoneSpec);
+
+      // Will invoke onFork
+      myZone.fork({
+        name: 'extended-my-zone'
+      })
+
+      // Will invoke onInvoke
+      myZone.run(main);
+      debugger;
+      console.log(`Data in Zone ${myZone.name} under key ${propKey} -> ${myZone.get(propKey)}`);
+    </script>
+  </body>
+</html>
