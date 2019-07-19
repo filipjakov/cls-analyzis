@@ -1,1 +1,117 @@
-- execution context - 
+LINKS
+
+- Some time ago I wrote a similar article but in Russian. There I explained 2 more interesting use cases:
+
+- automatically cleaning up event handlers when code leaves zone
+- prevent user of clicking on the same button while there are pending macrotasks 
+(useful when you want to block “Save” button while waiting for the response from server)
+
+- https://github.com/angular/zone.js/blob/71b93711806000d7788e79451478e20d6086aa8a/lib/zone.ts
+
+- https://blog.thoughtram.io/angular/2016/01/22/understanding-zones.html
+- https://blog.thoughtram.io/angular/2016/02/01/zones-in-angular-2.html
+- https://blog.thoughtram.io/angular/2017/02/21/using-zones-in-angular-for-better-performance.html
+
+- https://medium.com/ngconf/deep-dive-into-zone-js-part-1-execution-context-92166bbb957
+- https://medium.com/ngconf/deep-dive-into-zone-js-part-2-lifecycle-hooks-169da568227e
+
+- http://array151.com/nodejs-continuation-local-storage/
+- https://itnext.io/nodejs-logging-made-right-117a19e8b4ce
+
+- https://blog.angularindepth.com/do-you-still-think-that-ngzone-zone-js-is-required-for-change-detection-in-angular-16f7a575afef
+- https://blog.angularindepth.com/i-reverse-engineered-zones-zone-js-and-here-is-what-ive-found-1f48dc87659b
+- https://blog.bitsrc.io/how-angular-uses-ngzone-zone-js-for-dirty-checking-faa12f98cd49
+
+- https://medium.com/ngconf/deep-dive-into-zone-js-part-1-execution-context-92166bbb957
+- https://blog.strongbrew.io/how-the-hell-do-zones-really-work/
+
+- https://docs.google.com/document/d/1F5Ug0jcrm031vhSMJEOgp1l-Is-Vf0UCNDY-LsQtAIY/edit#
+- https://zone-ebb17.firebaseapp.com/zonetimeout
+
+- https://www.slideshare.net/IliaIdakiev/zonejs
+- https://blog.nrwl.io/controlling-time-with-zone-js-and-fakeasync-f0002dfbf48c
+- https://gist.github.com/mhevery/63fdcdf7c65886051d55
+
+- PROCESSES, TLS
+- https://stackoverflow.com/questions/27486873/fork-system-call-and-memory-space-of-the-process
+
+PRESENTATION OVERVIEW:
+
+Part 1
+- short introduction on processes, threads and Thread Local Storage (TLS) and it's use cases in multithreaded languages/environments
+- introduction to Zones: equivalent of TLS in JS's single threaded environment -> Continuation Local Storage (CLS): what is continuation-passing style, execution context and a short overview of Zone.js API with code examples
+- use cases for Zones with real life examples - introduction to the next chapter (usage of Zones in a framework)
+
+Part 2
+- using Angular without zones vs. using Angular with Zones
+- what is NgZone and how it uses Zones
+- examples in the framework: taking control of time, dirty-checking...
+
+
+###################################################################################################################
+########################################## PART 1 #################################################################
+###################################################################################################################
+
+- i took this task on so i can finally use this
+- https://gph.is/g/ZYrGDO4, https://media1.tenor.com/images/4481d33786f7f0d5a02724a32db26de6/tenor.gif?itemid=5965692
+- image of angular stack trace with zones
+
+- talk about content:
+  - Processes and threads
+  - TLS and CLS
+  - Zones (Zone.js) - history, api, use cases
+
+- START: A Zone is an execution context that persists across async tasks. You can think of it as thread-local storage for JavaScript VMs.
+  - what is an execution context, what are async tasks -> why do we need to persist exec context across async tasks
+  - what is TLC and what does a multithreaded concept has to do with JS
+
+- Process:
+  - https://www.tutorialspoint.com/operating_system/os_processes
+  - a process is basically a program in execution - environment for code execution
+  - each process provides the resources needed to execute a program:
+    - virtual address space, 
+    - open handles to system objects,
+    - environment variables,
+    - and at least one thread of execution
+    - ...
+  - Each process is started with a single thread, often called the primary thread, but can create additional threads from any of its threads.
+  - (an image: process with one thread, and all the stuff it contains)
+
+- Thread:
+  - a thread is a flow of execution through the process code
+  - A thread is an entity within a process that can be scheduled for execution 
+  - All threads of a process share its virtual address space and system resources
+
+- Table of difference: https://www.backblaze.com/blog/whats-the-diff-programs-processes-and-threads/
+- problems:
+  - Data Races, Deadlocks (https://stackoverflow.com/questions/34512/what-is-a-deadlock), Live Locks, Starvation
+  - https://i.stack.imgur.com/3XVzK.png)
+
+- TLS
+  - It is functionality that allows you to attach and retrieve data to the current processing thread from anywhere at anytime.
+  - It works by allocating specific memory to that thread.
+  - No data races
+  
+- parallel with single threaded, be greatful on single, example of losing execution context, zones
+
+- - Zones === CLS
+  - CPS - continuation-passing style
+    - Callback based JS/Node.js - The name CPS is due to the fact that you always pass a callback as the last argument to functions. 
+    That callback continues the execution of the function, is the next step to perform. 
+    It is thus often called a continuation -> functional programming.
+    - https://2ality.com/2012/06/continuation-passing-style.html
+  - monkey patching
+  - showing the api with example !!!TODO!!! - make it good
+
+- Use cases
+  - Testing 
+    - Auto-clean-up Events
+    - Auto-wait for test completion
+    - Take control of time
+  - Long Stack Traces
+  - Framework Auto Render (Dirty checking)
+  - Tracking user actions
+  - Resource Releasing
+
+  
+

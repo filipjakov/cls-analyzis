@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zone.js API Demo</title>
+    <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script>
+  </head>
+  <body>
+    <script>
+      const zone = Zone.current.fork({name: 'zoneA'});
+
+      function callback() {
+        // Javascript engine context 2
+        // Zone Context: zone
+        
+        // we can access the async execution context by call Zone.current
+        console.log('ctx', Zone.current.name); // will be zone
+      }
+
+      window.onload = zone.wrap(function() {
+        // Javascript engine context 1
+        // Zone Context: zone
+        console.log('ctx', Zone.current.name); // will be zone
+        setTimeout(zone.wrap(callback), 100);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Zone.js API Demo</title>
+    <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script>
+  </head>
+  <body>
+    <script>
+      const libZone = Zone.current.fork({name: 'libZone'});
+      const appZone = Zone.current.fork({name: 'appZone'});
+
+      let promise = libZone.run(() => {
+        return new Promise((resolve, reject) => {
+          // expect(Zone.current).toBe(libZone);
+          console.log('Is current zone libZone: ', Zone.current.name === libZone.name);
+          // The Promise can be resolved immediately or at some later
+          // point in time as in this example. 
+          setTimeout(() => {
+            // Promise is resolved in libZone, but this does not affect
+            // the promise listeners.
+            resolve('OK');
+          }, 500);
+        });
+      });
+
+      appZone.run(() => {
+        promise.then(() => {
+          // Because the developer controls which zone the .then() 
+          // executes, they will expect that the callback will execute in
+          // the same zone, in this case the appZone.
+          console.log('Is current zone appZone: ', Zone.current.name === appZone.name);
+        });
+      });
+
+      // Zone is entered twice. Once to resolve a promise, and second to call the then-callback.
+      setTimeout(() => {
+        let logZone = Zone.current.fork({
+          name: 'logZone', 
+          onInvoke: function(parentZoneDelegate, currentZone, targetZone, callback, delegate, applyThis, applyArgs, source) {
+            console.log(targetZone.name, 'enter');
+            parentZoneDelegate.invoke(targetZone, callback, applyThis, applyArgs, source)
+            console.log(targetZone.name, 'leave');
+          }
+        });
+
+        logZone.run(function myApp() {
+          console.log(Zone.current.name, 'queue promise');
+          Promise.resolve('OK').then((v) => 
+            console.log(Zone.current.name, 'Promise', v));
+        });
+      }, 1000)
+    </script>
+  </body>
+</html>

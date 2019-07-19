@@ -16,7 +16,6 @@
       const bar = () => console.log('In bar.');
       const baz = () => console.log('In baz.');
       const setTimeoutCb = () => {
-        console.log('In setTimeoutCb');
         throw new Error('💩💩💩!');
       }
 
@@ -34,17 +33,17 @@
           [propKey]: 'custom data',
         },
         onFork: (parentZoneDelegate, currentZone, targetZone, zoneSpec) => {
-          console.log(`Forking from Zone ${targetZone.name} to Zone ${zoneSpec.name}.`)
+          console.log(`onFork -> Forking from Zone ${targetZone.name} to Zone ${zoneSpec.name}.`)
           return parentZoneDelegate.fork(targetZone, zoneSpec);
         },
         // Allows interception of the wrapping of the callback.
         onIntercept: (parentZoneDelegate, currentZone, targetZone, delegate, source) => {
-          console.log('Intercepting wrapping.');
+          console.log('onIntercept -> Intercepting wrapping.');
           return parentZoneDelegate.intercept(targetZone, delegate, source);
         },
         // Get notified whenever the zone is entered by running z.run()
         onInvoke: (parentZoneDelegate, currentZone, targetZone, delegate, applyThis, applyArgs, source) => {
-          console.log(`Entering zone: '${targetZone.name}'.`);
+          console.log(`onInvoke -> Entering zone: '${targetZone.name}'.`);
           return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
         },
         onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
@@ -53,16 +52,16 @@
         },
         // Executed whenever an async operation like setTimeout is detected
         onScheduleTask: (parentZoneDelegate, currentZone, targetZone, task) => {
-          console.log(`Task with callback '${task.callback.name}' is added to the task queue.`);
+          console.log(`onScheduleTask -> Task with callback '${task.callback.name}' is added to the task queue.`);
           return parentZoneDelegate.scheduleTask(targetZone, task)
         },
         // executed when a callback passed to an async operation is executed
         onInvokeTask: (parentZoneDelegate, currentZone, targetZone, task, applyThis, applyArgs) => {
-          console.log(`Task with callback '${task.callback.name}' is removed from the task queue.`);
+          console.log(`onInvokeTask -> Task with callback '${task.callback.name}' is removed from the task queue.`);
           return parentZoneDelegate.invokeTask(targetZone, task, applyThis, applyArgs)
         },
         onCancelTask: (parentZoneDelegate, currentZone, targetZone, task) => {
-          console.log(`Task with callback '${task.callback.name}' is being canceled.`);
+          console.log(`onCancelTask -> Task with callback '${task.callback.name}' is being canceled.`);
           return parentZoneDelegate.cancelTask(targetZone, task)
         },
         // Notifies of changes to the task queue empty status.

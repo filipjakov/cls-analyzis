@@ -3,20 +3,30 @@
   <head>
     <meta charset="utf-8">
     <title>Zone.js API Demo</title>
-    <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script>
+    <!-- <script src="https://unpkg.com/zone.js@0.9.1/dist/zone.js"></script> -->
   </head>
 
   <body>
     <script>
-      const foo = () => console.log('FOO');
-      const bar = () => console.log('BAR');
-      const baz = () => console.log('BAZ');
+      function foo () {
+        console.trace();
+      }
+      
+      function bar () {
+        console.trace();
+      }
+      
+      function baz () {
+        console.trace();
+      }
+
+      function setTimeoutCb () {
+        throw new Error('💩💩💩!');
+      }
 
       const main = () => {
         foo();
-        setTimeout(() => {
-          throw new Error('SHIZZLE');
-        }, 2000);
+        setTimeout(setTimeoutCb, 2000);
         bar();
         baz();
       }
