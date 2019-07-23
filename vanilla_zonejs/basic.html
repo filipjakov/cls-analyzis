@@ -13,21 +13,16 @@
       }
       
       function bar () {
-        console.trace();
+        throw new Error('💩💩💩!');
       }
       
       function baz () {
         console.trace();
       }
 
-      function setTimeoutCb () {
-        throw new Error('💩💩💩!');
-      }
-
       const main = () => {
         foo();
-        setTimeout(setTimeoutCb, 2000);
-        bar();
+        setTimeout(bar, 2000);
         baz();
       }
 

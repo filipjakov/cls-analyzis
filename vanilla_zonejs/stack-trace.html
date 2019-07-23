@@ -14,9 +14,6 @@
     <button id="button2">Cause Error</button>
 
     <script>
-      /*
-      * This is a simple example of async stack traces with zones
-      */
       function main () {
         button1.addEventListener('click', bindSecondButton);
       }
@@ -29,17 +26,41 @@
         throw new Error('💩💩💩!');
       }
 
-      /*
-      * Bootstrap the app
-      * Either uncomment the raw main function or the forked zone and check the console
-      */
-      main();
-      // Zone.current.fork(
-      //   {
-      //     onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => 
-      //       console.log(error.stack)
-      //   }
-      // ).fork(Zone.longStackTraceZoneSpec).run(main);
+      // main()
+      Zone.current.fork(
+        {
+          onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => 
+            console.log(error.stack)
+        }
+      ).fork(Zone.longStackTraceZoneSpec).run(main);
+
+let rootZone = Zone.current;
+console.log(rootZone.name); // '<root>'
+
+// We create a new zone by forking an existing zone.
+let zoneA = rootZone.fork({ name: 'zoneA' });
+console.log(rootZone.name); // 'zoneA'
+
+// Child zone knows about its parent zone. (one way reference)
+console.log(zoneA.parent === rootZone); // true
+
+function main() {
+  // zones can be entered/exited using the `run or runGuarded or runTask` method only.
+  zoneA.run(function fnOuter() {
+    // inside the `run` method the Zone.current has been updated
+    console.log(Zone.current === zoneA) // true
+
+    // Zones are nested in the same way that stack frames are nested.
+    rootZone.run(function fnInner() {
+      // There is no reason why a nested stack frame must be a child of parent stack frame zone. 
+      // This is how one can "escape" a zone. 
+      console.log(Zone.current === rootZone) // true
+    });
+  });
+}
+
+main();
+
     </script>
   </body>
 </html>

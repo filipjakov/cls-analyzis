@@ -10,22 +10,20 @@
   <body>
     <script>
       console.log(`Starting demo in Zone: ${Zone.current.name}`);
-      const propKey = 'customData';
       
       const foo = () => console.log('In foo.');
       const bar = () => console.log('In bar.');
-      const baz = () => console.log('In baz.');
-      const setTimeoutCb = () => {
+      const baz = () => {
         throw new Error('💩💩💩!');
-      }
+      };
 
       const main = () => {
         foo();
-        setTimeout(setTimeoutCb, 2000);
+        setTimeout(baz, 2000);
         bar();
-        baz();
       }
 
+      const propKey = 'customData';
       const myZoneSpec = {
         // Mostly used for tooling and debugging purposes.
         name: 'my-zone',
@@ -47,7 +45,6 @@
           return parentZoneDelegate.invoke(targetZone, delegate, applyThis, applyArgs, source);
         },
         onHandleError: (parentZoneDelegate, currentZone, targetZone, error) => {
-          // console.error(error.stack);
           return parentZoneDelegate.handleError(targetZone, error);
         },
         // Executed whenever an async operation like setTimeout is detected
@@ -77,24 +74,14 @@
 
       const myZone = Zone.current.fork(Zone.longStackTraceZoneSpec).fork(myZoneSpec);
 
-      // Will invoke onFork
       myZone.fork({
         name: 'extended-my-zone'
       })
 
-      // Synchronously invokes a function in a given zone. 
-      // It sets the current zone to myZone when executing callback and resets it to its previous value once the callback has finished executing
-      myZone.run(main);
-
-      // Same as run but catches runtime errors and provides a mechanism to intercept them.
-      // If an error is not handled by any parent Zone it’s re-thrown.
-      // myZone.runGuarded(main);
-
-      // The mechanism is similar in the idea to how Function.prototype.bind works in JavaScript.
-      // Always bind to myZone
-      // myZone.run(myZone.wrap(main));
-
-      console.log(`Data in Zone ${myZone.name} under key ${propKey} -> ${myZone.get(propKey)}`);
+      myZone.run(() => {
+        console.log(`Data in Zone: ${myZone.get(propKey)}`);
+        main()
+      });
     </script>
   </body>
 </html>
